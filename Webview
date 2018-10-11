@@ -1,0 +1,96 @@
+using System;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Xamarin.Forms;
+
+namespace RichTextBox.Controls
+{
+    public delegate void OnTextChanged(string hola);
+
+    public class WebRichTextBox : WebView
+    {
+        TaskCompletionSource<string> tcs;
+        /// <summary>
+        /// Gets or sets the HTMLV alue.
+        /// </summary>
+        /// <value>The HTMLV alue.</value>
+        public OnTextChanged OnTextChangeEvent;
+
+        public WebRichTextBox()
+        {
+            OnTextChangeEvent += WebRichTextBox_OnTextChangeEvent;
+        }
+
+
+        void WebRichTextBox_OnTextChangeEvent(string hola)
+        {
+            tcs.TrySetResult(hola);
+        }
+
+        public static BindableProperty HTMLValueProperty = BindableProperty.Create(nameof(HTMLValue), typeof(string), typeof(WebRichTextBox), "", BindingMode.TwoWay);
+
+        /// <summary>
+        /// Gets or sets the HTMLV alue.
+        /// </summary>
+        /// <value>The HTMLV alue.</value>
+        public string HTMLValue
+        {
+            get
+            {
+                return (string)GetValue(HTMLValueProperty);
+            }
+            set
+            {
+                SetValue(HTMLValueProperty, value);
+            }
+        }
+
+        //Event
+
+        public Task<string> GetText()
+        {
+            tcs = new TaskCompletionSource<string>();
+            //EvalueateJS in Renderer
+            return tcs.Task;
+        }
+
+
+        async void GetHTMLRichText()
+        {
+            var text = await EvaluateJavaScriptAsync("");
+            await Task.Delay(5000);
+            HTMLValue = "hola";
+        }
+    }
+
+    public class Renderer
+    {
+        VisualElement Element;
+        public Renderer()
+        {
+           var control = Element as WebRichTextBox;
+            control.OnTextChangeEvent?.Invoke("");
+        }
+
+
+        async void Save()
+        {
+            var text = await box.GetText();
+        }
+    }
+
+    public class ViewModel
+    {
+        WebRichTextBox box;
+        public ViewModel()
+        {
+            box = new WebRichTextBox();
+        }
+
+
+        async void Save()
+        {
+             var text = await box.GetText();
+        }
+    }
+}
